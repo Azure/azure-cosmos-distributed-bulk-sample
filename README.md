@@ -25,6 +25,75 @@ The sample uses various configuration options to determine authentication, which
 | COSMOS.INITIAL_MICRO_BATCH_SIZE                  | COSMOS_INITIAL_MICRO_BATCH_SIZE                  | LOW        | 1                                                                                                                                                                     | The bulk ingestion feature in Cosmos DB allows streaming changes to the service by physical partition. This initial micro batch size determines the initial target size of a single request sent to a Cosmos DB partition. If the value is too high it could initially result in very high number of throttled requests - over time the sample will tune the micro batch size automatically to maintain a healthy throttling rate (enough to saturate the throughput without wasting too many resources on throttling. |
 | COSMOS.MAX_MICRO_BATCH_SIZE                      | COSMOS_MAX_MICRO_BATCH_SIZE                      | LOW        | 100                                                                                                                                                                   | The maximum number of documents sent to the Cosmos DB service for a physical partition in a single request. Has to be between 1 and 100.                                                                                                                                                                                                                                                                                                                                                                               |
 
+### Running the sample
+
+#### Preparation
+1) Create the target container
+Create the container the data should be ingested in. Make sure the number of pyhsical partitions created is high enough to accomodate the data being ingested. The explanation how ti achieve this is located [here](https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/cosmos/azure-cosmos-spark_3_2-12/docs/scenarios/Ingestion.md#creating-a-new-container-if-the-ingestion-via-the-cosmos-spark-connector-is-for-the-initial-migration) - 
+The sample expects that the container uses `/id` as partition key - if you want to use a different partition key, some code changes will be required first. When creating the container please ensure the partition key definition is set to `/id` and the indexing policy is updated to explude as many properties aspossible (each to-be-indexed property will add to the RU charge for write operations, so the fewer properties are indexed, the lower the RU charge for each write operation).
+The ideal index policy for the target container would look like this:
+
+```xml
+{
+    "indexingMode": "consistent",
+    "automatic": true,
+    "includedPaths": [
+        
+    ],
+    "excludedPaths": [
+        {
+            "path": "/*"
+        },
+        {
+            "path": "/\"_etag\"/?"
+        }
+    ]
+}
+```
+
+2) Create the Job contianer to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
+
+3) Sepcify the environment variables according to the (Configuration)[#Configuration] section above.
+
+#### Building the application
+You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the traget folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.
+
+#### Creating a new ingestion job
+Each ingestion will be tracked in a `Job` - the job and it's batches (fragments of input files) is tracked in a Cosmos DB Container used to store the metadata. The workers will then load-balance the ingestion across these batches.
+
+To create a new ingestion job - run the following command line
+```
+java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main create SampleJob01 ^.*\.json$
+```
+
+A slightly different syntax can be used to create the job quicker when you know that all your input files have the same number of lines/documents. In this case not each file is downloaded form Storage to count the target number of lines - but this step is done only for one file and then the same numbe rof lines is used for all files.
+```
+java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main createUnifrom SampleJob01 ^.*\.json$
+```
+
+Instead of `SampleJob01`use a unique identifier for your job. The `^.*\.json$` regex is used to identify the search pattern to find the files to be ingested (in the Storage account/container defined via the environment variables)
+
+** NOTE: ** please only execute the command to create a job from a single worker
+
+
+#### Ingesting the data
+This step can be executed from multiple workes. On each worker execute the following command.
+
+```
+java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main process SampleJob01
+```
+
+Instead of `SampleJob01`use the identifier for your job you created.
+
+#### Cleaning up status for a job
+Just in case you want to re-reun ingestion for a job with the same name/identifier, it is possible to also delete all metadata documents for a job.
+
+```
+java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main delete SampleJob01
+```
+
+Afterwards you can craete the job with the same name.
+
 ### Very high level design description
 For each batch (chunk of an input file) some context is captured and will be passed through the lifecycle of the ingestion. The chunk of documents to be processed is stored in a `Batch`. Processing the batch is done by invoking the correct operation in `DocumentBulkExecutor` to upsert/insert/delete etc. For each method invocation - tracking the ingestion of all documents of this batch an is captured in `DocumentBulkExecutorOperationStatus`. Here status like the number of successfully ingested documents, the number of outstanding operations, any failures (exceeding the defined retry count) etc. is captured.
 Each worker will process a configurable (see `COSMOS.MAX_CONCURRENT_BATCHES_PER_MACHINE`) number of batches - the higher, the more documents can be processed per machine - as long as the machine is not overloaded (monitor CPU/memory).

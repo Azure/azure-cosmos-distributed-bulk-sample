@@ -29,8 +29,8 @@ The sample uses various configuration options to determine authentication, which
 
 #### Preparation
 1) Create the target container
-Create the container the data should be ingested in. Make sure the number of pyhsical partitions created is high enough to accomodate the data being ingested. The explanation how ti achieve this is located [here](https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/cosmos/azure-cosmos-spark_3_2-12/docs/scenarios/Ingestion.md#creating-a-new-container-if-the-ingestion-via-the-cosmos-spark-connector-is-for-the-initial-migration) - 
-The sample expects that the container uses `/id` as partition key - if you want to use a different partition key, some code changes will be required first. When creating the container please ensure the partition key definition is set to `/id` and the indexing policy is updated to explude as many properties aspossible (each to-be-indexed property will add to the RU charge for write operations, so the fewer properties are indexed, the lower the RU charge for each write operation).
+Create the container the data should be ingested in. Ensure the number of physical partitions created is high enough to accommodate the data being ingested. The explanation about how to achieve this is located [here](https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/cosmos/azure-cosmos-spark_3_2-12/docs/scenarios/Ingestion.md#creating-a-new-container-if-the-ingestion-via-the-cosmos-spark-connector-is-for-the-initial-migration) - 
+The sample expects that the container uses `/id` as partition key - if you want to use a different partition key, some code changes will be required first. When creating the container please ensure the partition key definition is set to `/id` and the indexing policy is updated to exclude as many properties as possible (each to-be-indexed property will add to the RU charge for write operations, so the fewer properties are indexed, the lower the RU charge for each write operation).
 The ideal index policy for the target container would look like this:
 
 ```xml
@@ -51,12 +51,12 @@ The ideal index policy for the target container would look like this:
 }
 ```
 
-2) Create the Job contianer to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
+2) Create the Job container to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
 
-3) Sepcify the environment variables according to the (Configuration)[#Configuration] section above.
+3) Specify the environment variables according to the (Configuration)[#Configuration] section above.
 
 #### Building the application
-You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the traget folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.
+You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the target folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.
 
 #### Creating a new ingestion job
 Each ingestion will be tracked in a `Job` - the job and it's batches (fragments of input files) is tracked in a Cosmos DB Container used to store the metadata. The workers will then load-balance the ingestion across these batches.
@@ -66,12 +66,12 @@ To create a new ingestion job - run the following command line
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main create SampleJob01 ^.*\.json$
 ```
 
-A slightly different syntax can be used to create the job quicker when you know that all your input files have the same number of lines/documents. The metadata document for each input file contains the number of lines and splits the file into batches. To gather the number of lines of a file usually the `create` task would need to download all files form Azure Storage. When using `createUniform`the knowledge that all files have the same number of documents/lines is used to avoid downloading all files from Storage to count the target number of lines - instead this step is done only for one file and then the same number of lines is used for all files.
+A slightly different syntax can be used to create the job quicker when you know that all your input files have the same number of lines/documents. The metadata document for each input file contains the number of lines and splits the file into batches. To gather the number of lines of a file usually the `create` task would need to download all files from Azure Storage. When using the `createUniform` task the knowledge that all files have the same number of documents/lines is used to avoid downloading all files from Storage to count the target number of lines - instead this step is done only for one file and then the same number of lines is used for all files. This results in reducing the time it takes to create a job significantly.
 ```
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main createUnifrom SampleJob01 ^.*\.json$
 ```
 
-Instead of `SampleJob01`use a unique identifier for your job. The `^.*\.json$` regex is used to identify the search pattern to find the files to be ingested (in the Storage account/container defined via the environment variables)
+Instead of `SampleJob01` use a unique identifier for your job. The `^.*\.json$` regex is used to identify the search pattern to find the files to be ingested (in the Storage account/container defined via the environment variables)
 
 ** NOTE: ** please only execute the command to create a job from a single worker
 
@@ -83,10 +83,10 @@ This step can be executed from multiple workes. On each worker execute the follo
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main process SampleJob01
 ```
 
-Instead of `SampleJob01`use the identifier for your job you created.
+Instead of `SampleJob01` use the identifier for your job you created.
 
 #### Cleaning up status for a job
-Just in case you want to re-reun ingestion for a job with the same name/identifier, it is possible to also delete all metadata documents for a job.
+Just in case you want to re-run ingestion for a job with the same name/identifier, it is possible to also delete all metadata documents for a job.
 
 ```
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main delete SampleJob01

@@ -53,7 +53,7 @@ The ideal index policy for the target container would look like this:
 
 2) Create the Job container to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
 
-3) Sepcify the environment variables according to the (Configuration)[#Configuration] section above.
+3) Specify the environment variables according to the (Configuration)[#Configuration] section above.
 
 #### Building the application
 You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the traget folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.

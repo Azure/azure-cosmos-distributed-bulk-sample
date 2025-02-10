@@ -71,7 +71,7 @@ A slightly different syntax can be used to create the job quicker when you know 
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main createUnifrom SampleJob01 ^.*\.json$
 ```
 
-Instead of `SampleJob01`use a unique identifier for your job. The `^.*\.json$` regex is used to identify the search pattern to find the files to be ingested (in the Storage account/container defined via the environment variables)
+Instead of `SampleJob01` use a unique identifier for your job. The `^.*\.json$` regex is used to identify the search pattern to find the files to be ingested (in the Storage account/container defined via the environment variables)
 
 ** NOTE: ** please only execute the command to create a job from a single worker
 

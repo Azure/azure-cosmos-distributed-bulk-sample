@@ -86,7 +86,7 @@ java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependenci
 Instead of `SampleJob01`use the identifier for your job you created.
 
 #### Cleaning up status for a job
-Just in case you want to re-reun ingestion for a job with the same name/identifier, it is possible to also delete all metadata documents for a job.
+Just in case you want to re-run ingestion for a job with the same name/identifier, it is possible to also delete all metadata documents for a job.
 
 ```
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main delete SampleJob01

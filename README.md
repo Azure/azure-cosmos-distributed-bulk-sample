@@ -56,7 +56,7 @@ The ideal index policy for the target container would look like this:
 3) Specify the environment variables according to the (Configuration)[#Configuration] section above.
 
 #### Building the application
-You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the traget folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.
+You can use `mvn install` to build the jar file. The application will produce a fat-jar (one single jar file containing all dependencies). This file will be located in the target folder and have a name similar to `azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar`.
 
 #### Creating a new ingestion job
 Each ingestion will be tracked in a `Job` - the job and it's batches (fragments of input files) is tracked in a Cosmos DB Container used to store the metadata. The workers will then load-balance the ingestion across these batches.

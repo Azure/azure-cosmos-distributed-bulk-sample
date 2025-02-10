@@ -66,7 +66,7 @@ To create a new ingestion job - run the following command line
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main create SampleJob01 ^.*\.json$
 ```
 
-A slightly different syntax can be used to create the job quicker when you know that all your input files have the same number of lines/documents. In this case not each file is downloaded form Storage to count the target number of lines - but this step is done only for one file and then the same numbe rof lines is used for all files.
+A slightly different syntax can be used to create the job quicker when you know that all your input files have the same number of lines/documents. In this case not each file is downloaded from Storage to count the target number of lines - but this step is done only for one file and then the same number of lines is used for all files.
 ```
 java -cp ./azure-cosmos-distributed-bulk-sample-1.0-SNAPSHOT-jar-with-dependencies.jar com.azure.cosmos.samples.distributedbulk.Main createUnifrom SampleJob01 ^.*\.json$
 ```

@@ -29,7 +29,7 @@ The sample uses various configuration options to determine authentication, which
 
 #### Preparation
 1) Create the target container
-Create the container the data should be ingested in. Make sure the number of pyhsical partitions created is high enough to accomodate the data being ingested. The explanation how ti achieve this is located [here](https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/cosmos/azure-cosmos-spark_3_2-12/docs/scenarios/Ingestion.md#creating-a-new-container-if-the-ingestion-via-the-cosmos-spark-connector-is-for-the-initial-migration) - 
+Create the container the data should be ingested in. Ensure the number of physical partitions created is high enough to accommodate the data being ingested. The explanation about how to achieve this is located [here](https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/cosmos/azure-cosmos-spark_3_2-12/docs/scenarios/Ingestion.md#creating-a-new-container-if-the-ingestion-via-the-cosmos-spark-connector-is-for-the-initial-migration) - 
 The sample expects that the container uses `/id` as partition key - if you want to use a different partition key, some code changes will be required first. When creating the container please ensure the partition key definition is set to `/id` and the indexing policy is updated to explude as many properties aspossible (each to-be-indexed property will add to the RU charge for write operations, so the fewer properties are indexed, the lower the RU charge for each write operation).
 The ideal index policy for the target container would look like this:
 

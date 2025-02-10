@@ -51,7 +51,7 @@ The ideal index policy for the target container would look like this:
 }
 ```
 
-2) Create the Job contianer to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
+2) Create the Job container to use for tracking status etc. with metadata documents. This container has to use a partition key definition of `/pk` - and the standard indexing policy should be used.
 
 3) Sepcify the environment variables according to the (Configuration)[#Configuration] section above.
 

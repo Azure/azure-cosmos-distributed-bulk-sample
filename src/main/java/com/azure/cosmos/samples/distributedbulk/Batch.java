@@ -112,9 +112,25 @@ public class Batch implements Runnable {
                 5000 + rnd.nextInt(5000),
                 TimeUnit.MILLISECONDS);
 
-            bulkExecutor.upsertAll(
-                docs,
-                this.status);
+            switch(Configs.getOperationType()) {
+                case UPSERT:
+                    bulkExecutor.upsertAll(
+                        docs,
+                        this.status);
+                    break;
+                case DELETE:
+                    bulkExecutor.deleteAll(
+                        docs.map(d -> d.get("id").asText()),
+                        this.status);
+                    break;
+                case CREATE:
+                    bulkExecutor.importAll(
+                        docs,
+                        this.status);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown operation type " + Configs.getOperationType());
+            }
         } catch (IOException e) {
             logger.error("Failed to read cached file '{}'", cachedFile, e);
             throw new IllegalStateException(

@@ -3,6 +3,7 @@
 package com.azure.cosmos.samples.distributedbulk.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
@@ -10,11 +11,16 @@ import java.util.List;
 import java.util.Objects;
 
 public class JobRecord {
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String id;
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String pk;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final List<String> inputFiles;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("recordType")
     private final String recordType = "J";
 

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 package com.azure.cosmos.samples.distributedbulk;
 
 import com.azure.core.credential.TokenCredential;
@@ -23,6 +25,9 @@ import java.util.function.Function;
 
 public final class Configs {
     final static ObjectMapper mapper = new ObjectMapper();
+    private static final String ITEM_SERIALIZATION_INCLUSION_MODE = "COSMOS.ITEM_SERIALIZATION_INCLUSION_MODE";
+    private static final String ITEM_SERIALIZATION_INCLUSION_MODE_VARIABLE = "COSMOS_ITEM_SERIALIZATION_INCLUSION_MODE";
+
     private static final TokenCredential credential = new DefaultAzureCredentialBuilder()
         .managedIdentityClientId(Configs.getAadManagedIdentityId())
         .authorityHost(Configs.getAadLoginUri())
@@ -127,7 +132,6 @@ public final class Configs {
     }
 
     private static CosmosClientBuilder getCosmosClientBuilder(String userAgentSuffix) {
-
         String effectiveUserAgentSuffix = Main.getMachineId();
         if (userAgentSuffix != null && userAgentSuffix.length() > 0) {
             effectiveUserAgentSuffix += userAgentSuffix + "_";

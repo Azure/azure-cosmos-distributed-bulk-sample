@@ -3,6 +3,7 @@
 package com.azure.cosmos.samples.distributedbulk.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -12,34 +13,46 @@ import java.util.Objects;
 
 public class BatchRecord {
     @JsonSerialize(using = LongToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final long offset;
 
     @JsonSerialize(using = LongToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final long recordCount;
 
     @JsonSerialize(using = IntegerToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final int index;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private String owningWorker;
 
     @JsonDeserialize(using = StringToTimeStampDeserializer.class)
     @JsonSerialize(using = TimeStampToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private Instant owningWorkerLastModified;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String id;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String pk;
 
     @JsonProperty("_etag")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private String etag;
 
     @JsonProperty("recordType")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String recordType = "B";
 
+    @JsonProperty("status")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private IngestionStatus status;
 
     @JsonDeserialize(using = StringToDoubleDeserializer.class)
     @JsonSerialize(using = DoubleToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private double estimatedProgress;
 
     @JsonCreator

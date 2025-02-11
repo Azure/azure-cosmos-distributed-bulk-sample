@@ -433,6 +433,8 @@ class BulkWriter implements AutoCloseable {
             markSuccess(ctx, itemOperation, itemResponse.getStatusCode());
         } else if (itemResponse.getStatusCode() == 409) {
             markSuccess(ctx, itemOperation, 409);
+        } else if (itemResponse.getStatusCode() == 404 && itemOperation.getOperationType() == CosmosItemOperationType.DELETE) {
+            markSuccess(ctx, itemOperation, 404);
         } else if (shouldRetry(itemResponse.getStatusCode())) {
             //re-scheduling
             scheduleRetry(itemOperation, itemResponse.getRetryAfterDuration(), null);

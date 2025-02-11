@@ -16,6 +16,7 @@ import com.azure.cosmos.GatewayConnectionConfig;
 import com.azure.cosmos.ThrottlingRetryOptions;
 import com.azure.cosmos.models.CosmosClientTelemetryConfig;
 import com.azure.cosmos.models.CosmosRequestOptions;
+import com.azure.cosmos.samples.distributedbulk.model.OpType;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -102,6 +103,13 @@ public final class Configs {
                     return ConnectionMode.GATEWAY.toString();
                 }
             });
+    }
+
+    public static OpType getOperationType() {
+        return getOptionalConfigProperty(
+            "OPERATION_TYPE",
+            OpType.UPSERT,
+            (s) -> OpType.fromValue(s));
     }
 
     public static int getMaxMicroBatchConcurrencyPerPartition() {

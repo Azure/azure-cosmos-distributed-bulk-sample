@@ -31,13 +31,51 @@ public class DocumentBulkExecutor<T> {
         this.idExtractor = idExtractor;
     }
 
-    /*
-    public BulkDeleteResponse deleteAll(List<Pair<String, String>> pkIdPairsToDelete) {
+    public BulkDeleteResponse deleteAll(Stream<String> idsToDelete, DocumentBulkExecutorOperationStatus status) {
+        Objects.requireNonNull(idsToDelete, "Argument 'idsToDelete' must not be null.");
+        Objects.requireNonNull(status, "Argument 'status' must not be null.");
 
+        try {
+            Stream<CosmosItemOperation> docsToDelete = idsToDelete
+                .map(id -> {
+                    return CosmosBulkOperations.getDeleteItemOperation(
+                        id,
+                        new PartitionKey(id),
+                        null,
+                        new OperationContext(id, status.getOperationId()));
+                });
+            BulkImportResponse importResponse = executeBulkOperations(docsToDelete, status);
+            return new BulkDeleteResponse(
+                importResponse.getNumberOfDocumentsImported(),
+                importResponse.getTotalRequestUnitsConsumed(),
+                importResponse.getTotalTimeTaken(),
+                importResponse.getErrors());
+        } catch (Throwable t) {
+            logger.error("Failed to delete documents - {}", t.getMessage(), t);
+            throw new IllegalStateException("Failed to delete documents", t);
+        }
     }
 
-    public BulkImportResponse importAll(Collection<?> documents) {
-    }*/
+    public BulkImportResponse importAll(Stream<T> documents,  DocumentBulkExecutorOperationStatus status) {
+        Objects.requireNonNull(documents, "Argument 'documents' must not be null.");
+        Objects.requireNonNull(status, "Argument 'status' must not be null.");
+
+        try {
+            Stream<CosmosItemOperation> docsToInsert = documents
+                .map(doc -> {
+                    String id = this.idExtractor.apply(doc);
+                    return CosmosBulkOperations.getCreateItemOperation(
+                        doc,
+                        new PartitionKey(id),
+                        null,
+                        new OperationContext(id, status.getOperationId()));
+                });
+            return executeBulkOperations(docsToInsert, status);
+        } catch (Throwable t) {
+            logger.error("Failed to insert documents - {}", t.getMessage(), t);
+            throw new IllegalStateException("Failed to insert documents", t);
+        }
+    }
 
     /**
      * Upserts all documents in bulk mode

@@ -27,9 +27,6 @@ public class Main {
 
     private static String computeMachineId(String[] args) {
         String prefix = "";
-
-
-
         String suffix = args != null && args.length >= 2 ? args[1] + "_" + args[0]  : "";
 
         logger.info("Trying to read VM metadata from IMDS endpoint to extract VMId...");

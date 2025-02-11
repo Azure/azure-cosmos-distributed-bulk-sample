@@ -132,6 +132,17 @@ public final class Configs {
     }
 
     private static CosmosClientBuilder getCosmosClientBuilder(String userAgentSuffix) {
+        if (System.getProperty(ITEM_SERIALIZATION_INCLUSION_MODE) == null
+            && System.getenv(ITEM_SERIALIZATION_INCLUSION_MODE_VARIABLE) == null) {
+
+            // If no explicit override is set via system property or environment variable
+            // change the serialization inclusion mode to "NonNull" - which reflects what
+            // the V2 DocumentBulkExecutor used to do. In this mode JSON properties with
+            // a null value are not emitted in the JSON document when serializing to a
+            // JSON string.
+            System.setProperty(ITEM_SERIALIZATION_INCLUSION_MODE, "NonNull");
+        }
+
         String effectiveUserAgentSuffix = Main.getMachineId();
         if (userAgentSuffix != null && userAgentSuffix.length() > 0) {
             effectiveUserAgentSuffix += userAgentSuffix + "_";

@@ -3,6 +3,7 @@
 package com.azure.cosmos.samples.distributedbulk.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -10,22 +11,29 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Objects;
 
 public class InputFileRecord {
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String blobName;
 
     @JsonSerialize(using = LongToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final long recordCount;
 
     @JsonSerialize(using = LongToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final long sizeInBytes;
 
     @JsonSerialize(using = IntegerToStringSerializer.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final int batchCount;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String id;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String pk;
 
     @JsonProperty("recordType")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final String recordType = "F";
 
     @JsonCreator

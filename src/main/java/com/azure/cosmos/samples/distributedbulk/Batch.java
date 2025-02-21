@@ -116,17 +116,20 @@ public class Batch implements Runnable {
                 case UPSERT:
                     bulkExecutor.upsertAll(
                         docs,
-                        this.status);
+                        this.status,
+                        true);
                     break;
                 case DELETE:
                     bulkExecutor.deleteAll(
                         docs.map(d -> d.get("id").asText()),
-                        this.status);
+                        this.status,
+                        true);
                     break;
                 case CREATE:
                     bulkExecutor.importAll(
                         docs,
-                        this.status);
+                        this.status,
+                        true);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown operation type " + Configs.getOperationType());

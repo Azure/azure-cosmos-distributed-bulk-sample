@@ -152,7 +152,7 @@ class BulkWriter implements AutoCloseable {
             result.name());
 
         try {
-            this.bulkWriterInputBoundedElastic.disposeGracefully();
+            this.bulkWriterInputBoundedElastic.dispose();
         } catch (Throwable t) {
             logger.info(
                 "Failed to dispose bulkWriterInputBoundedElastic of batch [{}}].",
@@ -161,7 +161,7 @@ class BulkWriter implements AutoCloseable {
         }
 
         try {
-            this.bulkWriterResponsesBoundedElastic.disposeGracefully();
+            this.bulkWriterResponsesBoundedElastic.dispose();
         } catch (Throwable t) {
             logger.info(
                 "Failed to dispose bulkWriterResponsesBoundedElastic of batch [{}}].",

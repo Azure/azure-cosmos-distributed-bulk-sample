@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -31,7 +34,11 @@ public class DocumentBulkExecutor<T> {
         this.idExtractor = idExtractor;
     }
 
-    public BulkDeleteResponse deleteAll(Stream<String> idsToDelete, DocumentBulkExecutorOperationStatus status) {
+    public BulkDeleteResponse deleteAll(
+        Stream<String> idsToDelete,
+        DocumentBulkExecutorOperationStatus status,
+        boolean shouldDedupe) {
+
         Objects.requireNonNull(idsToDelete, "Argument 'idsToDelete' must not be null.");
         Objects.requireNonNull(status, "Argument 'status' must not be null.");
 
@@ -44,7 +51,7 @@ public class DocumentBulkExecutor<T> {
                         null,
                         new OperationContext(id, status.getOperationId()));
                 });
-            BulkImportResponse importResponse = executeBulkOperations(docsToDelete, status);
+            BulkImportResponse importResponse = executeBulkOperations(docsToDelete, status, shouldDedupe);
             return new BulkDeleteResponse(
                 importResponse.getNumberOfDocumentsImported(),
                 importResponse.getTotalRequestUnitsConsumed(),
@@ -56,7 +63,11 @@ public class DocumentBulkExecutor<T> {
         }
     }
 
-    public BulkImportResponse importAll(Stream<T> documents,  DocumentBulkExecutorOperationStatus status) {
+    public BulkImportResponse importAll(
+        Stream<T> documents,
+        DocumentBulkExecutorOperationStatus status,
+        boolean shouldDedupe) {
+
         Objects.requireNonNull(documents, "Argument 'documents' must not be null.");
         Objects.requireNonNull(status, "Argument 'status' must not be null.");
 
@@ -70,7 +81,7 @@ public class DocumentBulkExecutor<T> {
                         null,
                         new OperationContext(id, status.getOperationId()));
                 });
-            return executeBulkOperations(docsToInsert, status);
+            return executeBulkOperations(docsToInsert, status, shouldDedupe);
         } catch (Throwable t) {
             logger.error("Failed to insert documents - {}", t.getMessage(), t);
             throw new IllegalStateException("Failed to insert documents", t);
@@ -85,18 +96,21 @@ public class DocumentBulkExecutor<T> {
     public BulkImportResponse upsertAll(Stream<T> documents) {
         return this.upsertAll(
             documents,
-            new DocumentBulkExecutorOperationStatus());
+            new DocumentBulkExecutorOperationStatus(),
+            false);
     }
 
     /**
      * Upserts all documents in bulk mode
      * @param documents a collection of documents for a logical batch
      * @param status can be used to track the status of the bulk ingestion for this batch at real-time
+     * @param shouldDedupe a flag indicating whether only one (the last) update should be executed per document
      * @return A BulkImportResponse with aggregated diagnostics and eventual failures.
      */
     public BulkImportResponse upsertAll(
         Stream<T> documents,
-        DocumentBulkExecutorOperationStatus status) {
+        DocumentBulkExecutorOperationStatus status,
+        boolean shouldDedupe) {
 
         Objects.requireNonNull(documents, "Argument 'documents' must not be null.");
         Objects.requireNonNull(status, "Argument 'status' must not be null.");
@@ -111,7 +125,7 @@ public class DocumentBulkExecutor<T> {
                                 null,
                                 new OperationContext(id, status.getOperationId()));
                     });
-            return executeBulkOperations(docsToUpsert, status);
+            return executeBulkOperations(docsToUpsert, status, shouldDedupe);
         } catch (Throwable t) {
             logger.error("Failed to upsert documents - {}", t.getMessage(), t);
             throw new IllegalStateException("Failed to upsert documents", t);
@@ -120,15 +134,21 @@ public class DocumentBulkExecutor<T> {
 
     private BulkImportResponse executeBulkOperations(
         Stream<CosmosItemOperation> operations,
-        DocumentBulkExecutorOperationStatus status) {
+        DocumentBulkExecutorOperationStatus status,
+        boolean shouldDedupe) {
 
         Instant startTime = Instant.now();
         try (BulkWriter writer = new BulkWriter(
             this.cosmosAsyncContainer,
             status)) {
 
-            operations
-                .forEach(writer::scheduleWrite);
+            if (shouldDedupe) {
+                dedupeOperations(operations, status)
+                    .forEach(writer::scheduleWrite);
+            } else {
+                operations
+                    .forEach(writer::scheduleWrite);
+            }
 
             logger.info("All items of batch {} scheduled.", status.getOperationId());
             writer.flush();
@@ -149,9 +169,30 @@ public class DocumentBulkExecutor<T> {
                 (int)status.getOperationsCompleted().get(),
                 status.getTotalRequestChargeSnapshot(),
                 Duration.between(startTime, Instant.now()),
-                null,
+                new ArrayList<>(),
                 badInputDocs,
                 failures);
         }
+    }
+
+    private static Stream<CosmosItemOperation> dedupeOperations(
+        Stream<CosmosItemOperation> operations,
+        DocumentBulkExecutorOperationStatus status) {
+
+        LinkedHashSet<String> ids = new LinkedHashSet<>();
+        HashMap<String, CosmosItemOperation> idToOperationMap = new HashMap<>();
+        operations.forEachOrdered(op -> {
+            String id = op.<OperationContext>getContext().getId();
+            if (!ids.add(id)) {
+                // id already existed - so this is a duplicate operation.
+                // mark the operation as success for bookkeeping
+                status.getOperationsCompleted().incrementAndGet();
+            }
+            idToOperationMap.put(id, op);
+        });
+
+        return ids
+            .stream()
+            .map(id -> idToOperationMap.get(id));
     }
 }
